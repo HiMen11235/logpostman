@@ -1,22 +1,25 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import argparse
 import os
 import random
 import time
-from urllib import request
 from scapy.all import *
 import ipaddress
+import sys
 
 
 def get_args():
     parser = argparse.ArgumentParser()
-    ip_header_value = parser.add_argument_group("IP header values", "")
+    ip_header_value = parser.add_argument_group("IP", "")
     ip_header_value.add_argument(
         "host", default=None, help="destination address", type=str
     )
     ip_header_value.add_argument(
         "-a", "--spoof", default=None, help="spoof source address"
     )
-    udp_header_value = parser.add_argument_group("UDP header values", "")
+    udp_header_value = parser.add_argument_group("UDP", "")
     udp_header_value.add_argument(
         "-s",
         "--baseport",
@@ -135,8 +138,32 @@ def absolute_path(file_path: str):
         return os.path.abspath(file_path)
 
 
-def main():
-    # Obtaining Arguments.
+def sending_syslog(
+    src_ip: str,
+    dst_ip: str,
+    src_port: int,
+    dst_port: int,
+    message: str,
+    facility: int,
+    severity: int,
+    raw: bool,
+):
+    # Creating IP Headers.
+    ip = ip_header(src_ip, str(dst_ip))
+    # Creating UDP Headers.
+    udp = udp_header(src_port, int(dst_port))
+    # Calculate syslog priority value.
+    PRI = "<" + str(int(facility) * 8 + int(severity)) + ">"
+    if bool(raw):
+        msg = message.strip()
+    else:
+        msg = PRI + message.strip()
+    packets = ip / udp / msg
+    send(packets, verbose=0)
+    return True
+
+
+def validate_arguments():
     args = get_args()
     # Validation of IP addresses.
     validate_ip_address(args.host)
@@ -149,20 +176,24 @@ def main():
     # Facility and Severity Validation.
     validate_facility(int(args.facility))
     validate_severity(int(args.severity))
-    # Creating IP Headers.
-    ip = ip_header(args.spoof, args.host)
-    # Creating UDP Headers.
-    udp = udp_header(args.baseport, args.destport)
-    # Calculate syslog priority value.
-    PRI = "<" + str(int(args.facility) * 8 + int(args.severity)) + ">"
+    return args
+
+
+def main():
+    # Argument validation and retrieval.
+    args = validate_arguments()
     # Action when a message option is specified.
     if args.file is None and args.message is not None:
-        if args.raw:
-            message = args.message.strip()
-        else:
-            message = PRI + str(args.message).strip()
-        packets = ip / udp / message
-        send(packets, verbose=0)
+        sending_syslog(
+            str(args.spoof),
+            str(args.host),
+            args.baseport,
+            int(args.destport),
+            str(args.message),
+            int(args.facility),
+            int(args.severity),
+            bool(args.raw),
+        )
         if args.quiet:
             pass
         else:
@@ -176,12 +207,16 @@ def main():
             sent_count = 0
             start_time = time.time()
             for i, message in enumerate(f):
-                if args.raw:
-                    message = args.message.strip()
-                else:
-                    message = PRI + message.strip()
-                packets = ip / udp / message
-                send(packets, verbose=0)
+                sending_syslog(
+                    str(args.spoof),
+                    str(args.host),
+                    args.baseport,
+                    int(args.destport),
+                    str(message),
+                    int(args.facility),
+                    int(args.severity),
+                    args.raw,
+                )
                 if i % args.eps == 0:
                     end_time = time.time()
                     if (end_time - start_time) >= 1.0:
