@@ -81,7 +81,7 @@ def get_args():
     try:
         args = parser.parse_args()
     except:
-        sys.exit(1)
+        sys.exit(0)
     return args
 
 
@@ -90,7 +90,7 @@ def validate_ip_address(ip_address: str):
         tmp = ipaddress.ip_address(ip_address)
     except:
         print("Invalid IP address.Please enter IPv4 or IPv6 format. :" + ip_address)
-        sys.exit(1)
+        sys.exit(0)
 
 
 def validate_port_number(port_number: int):
@@ -98,7 +98,7 @@ def validate_port_number(port_number: int):
         pass
     else:
         print("Please enter a valid port number. :" + str(port_number))
-        sys.exit(1)
+        sys.exit(0)
 
 
 def validate_facility(facility: int):
@@ -106,7 +106,7 @@ def validate_facility(facility: int):
         pass
     else:
         print("Invalid facility values. :" + str(facility))
-        sys.exit(1)
+        sys.exit(0)
 
 
 def validate_severity(severity: int):
@@ -114,7 +114,7 @@ def validate_severity(severity: int):
         pass
     else:
         print("Invalid severity values. :" + str(severity))
-        sys.exit(1)
+        sys.exit(0)
 
 
 def ip_header(src_ip: str, dst_ip: str):
