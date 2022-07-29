@@ -180,11 +180,6 @@ def validate_arguments():
 
 
 def main():
-    # Confirmation of root privileges
-    if os.geteuid() == 0 and os.getuid == 0:
-        pass
-    else:
-        sys.exit("Root privileges are required.")
     # Argument validation and retrieval.
     args = validate_arguments()
     # Action when a message option is specified.
