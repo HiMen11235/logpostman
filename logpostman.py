@@ -124,10 +124,6 @@ def ip_header(src_ip: str, dst_ip: str):
         return IP(src=str(src_ip), dst=str(dst_ip))
 
 
-def udp_header(src_port: int, dst_port: int):
-    return UDP(sport=src_port, dport=dst_port)
-
-
 def absolute_path(file_path: str):
     if os.path.isabs(file_path):
         return file_path
@@ -148,7 +144,7 @@ def sending_syslog(
     # Creating IP Headers.
     ip = ip_header(src_ip, str(dst_ip))
     # Creating UDP Headers.
-    udp = udp_header(src_port, int(dst_port))
+    udp = UDP(sport=src_port, dport=dst_port)
     # Calculate syslog priority value.
     PRI = "<" + str(int(facility) * 8 + int(severity)) + ">"
     if bool(raw):
