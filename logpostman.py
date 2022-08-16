@@ -118,17 +118,14 @@ def validate_severity(severity: int):
 
 
 def ip_header(src_ip: str, dst_ip: str):
-    if src_ip is None:
+    if src_ip == "None":
         return IP(dst=str(dst_ip))
     else:
         return IP(src=str(src_ip), dst=str(dst_ip))
 
 
 def udp_header(src_port: int, dst_port: int):
-    if src_port is None:
-        return UDP(sport=random.randint(49152, 65535), dport=dst_port)
-    else:
-        return UDP(sport=src_port, dport=dst_port)
+    return UDP(sport=src_port, dport=dst_port)
 
 
 def absolute_path(file_path: str):
@@ -182,12 +179,20 @@ def validate_arguments():
 def main():
     # Argument validation and retrieval.
     args = validate_arguments()
+    baseport = 0
+    src_ip = "None"
+    if args.baseport is None:
+        baseport = random.randint(49152, 65535)
+    else:
+        baseport = int(args.baseport)
+    if args.spoof is not None:
+        scr_ip = str(args.spoof)
     # Action when a message option is specified.
     if args.file is None and args.message is not None:
         sending_syslog(
             str(args.spoof),
             str(args.host),
-            args.baseport,
+            int(baseport),
             int(args.destport),
             str(args.message),
             int(args.facility),
@@ -210,12 +215,12 @@ def main():
                 sending_syslog(
                     str(args.spoof),
                     str(args.host),
-                    args.baseport,
+                    int(baseport),
                     int(args.destport),
                     str(message),
                     int(args.facility),
                     int(args.severity),
-                    args.raw,
+                    bool(args.raw),
                 )
                 if i % args.eps == 0:
                     end_time = time.time()
